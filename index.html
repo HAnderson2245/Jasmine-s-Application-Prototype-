@@ -1,0 +1,2047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Jasmine - Mobile App Prototype</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        :root {
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --info-color: #06b6d4;
+            --background-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --border-radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        body {
+            background: var(--background-gradient);
+            color: #1f2937;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .device-frame {
+            width: 100%;
+            max-width: 390px;
+            height: 844px;
+            background: #000;
+            border-radius: 40px;
+            padding: 8px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        
+        .device-screen {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 32px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .status-bar {
+            height: 54px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .status-bar .time {
+            font-weight: 700;
+        }
+        
+        .status-bar .battery {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .app-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 20px;
+            position: relative;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .header-content {
+            flex: 1;
+        }
+        
+        .header-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .header-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .header-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+        }
+        
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--error-color);
+            color: white;
+            width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+        
+        .back-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 20px;
+            transition: var(--transition);
+            margin-right: 10px;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .screen {
+            display: none;
+            min-height: 100%;
+            animation: slideInRight 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes slideInRight {
+            from { 
+                opacity: 0; 
+                transform: translateX(50px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateX(0); 
+            }
+        }
+        
+        @keyframes slideInLeft {
+            from { 
+                opacity: 0; 
+                transform: translateX(-50px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateX(0); 
+            }
+        }
+        
+        .screen.active {
+            display: block;
+        }
+        
+        .screen.slide-left {
+            animation: slideInLeft 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .container {
+            padding: 20px;
+        }
+        
+        .welcome-container {
+            text-align: center;
+            padding: 40px 20px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .app-logo {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 30px;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+            box-shadow: var(--card-shadow);
+            animation: logoFloat 3s ease-in-out infinite;
+        }
+        
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .welcome-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #1f2937;
+        }
+        
+        .welcome-subtitle {
+            font-size: 18px;
+            color: #6b7280;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 18px 32px;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--card-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 56px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .btn-outline:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280, #9ca3af);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-color), #059669);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, var(--error-color), #dc2626);
+        }
+        
+        .form-container {
+            padding: 30px 20px;
+        }
+        
+        .form-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .form-subtitle {
+            font-size: 16px;
+            color: #6b7280;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: var(--transition);
+            background: #f9fafb;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .form-input.error {
+            border-color: var(--error-color);
+            background: #fef2f2;
+        }
+        
+        .form-error {
+            color: var(--error-color);
+            font-size: 12px;
+            margin-top: 6px;
+            display: none;
+        }
+        
+        .form-success {
+            color: var(--success-color);
+            font-size: 12px;
+            margin-top: 6px;
+            display: none;
+        }
+        
+        .verification-container {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .verification-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--success-color), #059669);
+            border-radius: 40px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+        }
+        
+        .code-input-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 30px 0;
+        }
+        
+        .code-input {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 600;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            background: #f9fafb;
+        }
+        
+        .code-input:focus {
+            border-color: var(--primary-color);
+            background: white;
+        }
+        
+        .dashboard-header {
+            padding: 20px;
+            background: white;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .user-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 35px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .user-details h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        
+        .user-details p {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .user-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-item {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            padding: 16px 12px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .stat-number {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        
+        .search-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 16px 50px 16px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 25px;
+            font-size: 16px;
+            background: #f9fafb;
+            transition: var(--transition);
+        }
+        
+        .search-input:focus {
+            border-color: var(--primary-color);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .search-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .tab-nav {
+            display: flex;
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 12px 16px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            white-space: nowrap;
+            min-width: 80px;
+        }
+        
+        .tab-btn.active {
+            background: white;
+            color: var(--primary-color);
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .service-categories {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+        
+        .category-chip {
+            background: #f1f5f9;
+            color: #475569;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid transparent;
+        }
+        
+        .category-chip.active,
+        .category-chip:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .service-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+            border-color: var(--primary-color);
+        }
+        
+        .service-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .service-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .service-price {
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .service-rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .rating-stars {
+            color: #fbbf24;
+        }
+        
+        .booking-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .booking-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            cursor: pointer;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .booking-card:hover {
+            transform: translateX(5px);
+        }
+        
+        .booking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        
+        .booking-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        
+        .booking-date {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .booking-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-confirmed {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-cancelled {
+            background: #fecaca;
+            color: #991b1b;
+        }
+        
+        .booking-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .booking-provider {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .booking-price {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .profile-section {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .profile-field {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .profile-field:last-child {
+            border-bottom: none;
+        }
+        
+        .field-label {
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .field-value {
+            color: #6b7280;
+            text-align: right;
+        }
+        
+        .edit-btn {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: var(--transition);
+        }
+        
+        .edit-btn:hover {
+            background: #f3f4f6;
+        }
+        
+        .bottom-nav {
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            padding: 12px 0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: sticky;
+            bottom: 0;
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            color: #6b7280;
+            font-size: 12px;
+            font-weight: 500;
+            min-width: 60px;
+        }
+        
+        .nav-item.active {
+            color: var(--primary-color);
+            background: #f0f4ff;
+        }
+        
+        .nav-item i {
+            font-size: 20px;
+            margin-bottom: 2px;
+        }
+        
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .admin-stat-card {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .admin-stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4);
+        }
+        
+        .stat-icon {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .stat-title {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .admin-menu {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+        }
+        
+        .admin-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .admin-menu-item:last-child {
+            border-bottom: none;
+        }
+        
+        .admin-menu-item:hover {
+            background: #f8fafc;
+        }
+        
+        .admin-menu-item i {
+            width: 40px;
+            height: 40px;
+            background: #f1f5f9;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            margin-right: 15px;
+            font-size: 18px;
+        }
+        
+        .menu-content {
+            flex: 1;
+        }
+        
+        .menu-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        
+        .menu-description {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 15px;
+        }
+        
+        .canvas-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        .user-management-table {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+        }
+        
+        .table-header {
+            background: #f8fafc;
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .table-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .user-row {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #f3f4f6;
+            transition: var(--transition);
+        }
+        
+        .user-row:hover {
+            background: #f8fafc;
+        }
+        
+        .user-row:last-child {
+            border-bottom: none;
+        }
+        
+        .row-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            margin-right: 15px;
+        }
+        
+        .row-info {
+            flex: 1;
+        }
+        
+        .row-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 2px;
+        }
+        
+        .row-email {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .row-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        
+        .status-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-inactive {
+            background: #fecaca;
+            color: #991b1b;
+        }
+        
+        .row-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        
+        .btn-edit {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .btn-delete {
+            background: #fecaca;
+            color: #991b1b;
+        }
+        
+        .btn-view {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .notification-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 15px;
+            background: white;
+            border-radius: var(--border-radius);
+            margin-bottom: 12px;
+            box-shadow: var(--card-shadow);
+            cursor: pointer;
+            transition: var(--transition);
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .notification-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .notification-item.unread {
+            background: #f0f4ff;
+        }
+        
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .notification-content {
+            flex: 1;
+        }
+        
+        .notification-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        
+        .notification-message {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+        
+        .notification-time {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+        
+        .floating-btn {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 28px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+            transition: var(--transition);
+            z-index: 1000;
+        }
+        
+        .floating-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 25px rgba(99, 102, 241, 0.5);
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal.active {
+            display: flex;
+            animation: modalFadeIn 0.3s ease;
+        }
+        
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            max-width: 90%;
+            width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalSlideUp 0.3s ease;
+        }
+        
+        @keyframes modalSlideUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(50px) scale(0.9); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1); 
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 4px;
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+        
+        .close-btn:hover {
+            background: #f3f4f6;
+        }
+        
+        .calendar-container {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .month-nav {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--primary-color);
+            padding: 8px;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+        
+        .month-nav:hover {
+            background: #f0f4ff;
+        }
+        
+        .month-year {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+        
+        .calendar-day-header {
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            padding: 8px 0;
+        }
+        
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .calendar-day:hover {
+            background: #f0f4ff;
+        }
+        
+        .calendar-day.today {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .calendar-day.selected {
+            background: var(--secondary-color);
+            color: white;
+        }
+        
+        .calendar-day.disabled {
+            color: #d1d5db;
+            cursor: not-allowed;
+        }
+        
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .time-slot {
+            padding: 12px;
+            text-align: center;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+        
+        .time-slot:hover {
+            border-color: var(--primary-color);
+            background: #f0f4ff;
+        }
+        
+        .time-slot.selected {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .time-slot.unavailable {
+            background: #f3f4f6;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 3000;
+            opacity: 0;
+            transition: var(--transition);
+        }
+        
+        .toast.show {
+            opacity: 1;
+        }
+        
+        .toast.success {
+            background: var(--success-color);
+        }
+        
+        .toast.error {
+            background: var(--error-color);
+        }
+        
+        .toast.warning {
+            background: var(--warning-color);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 390px) {
+            .device-frame {
+                border-radius: 0;
+                padding: 0;
+                height: 100vh;
+            }
+            
+            .device-screen {
+                border-radius: 0;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .services-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .admin-stats {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .device-screen {
+                background: #1f2937;
+                color: white;
+            }
+            
+            .form-input {
+                background: #374151;
+                border-color: #4b5563;
+                color: white;
+            }
+            
+            .service-card,
+            .booking-card,
+            .profile-section {
+                background: #374151;
+            }
+        }
+        
+        /* Accessibility improvements */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        
+        /* Focus styles for better accessibility */
+        .btn:focus,
+        .form-input:focus,
+        .nav-item:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="device-frame">
+        <div class="device-screen">
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <div class="time" id="currentTime">9:41</div>
+                <div class="carrier">Jasmine Mobile</div>
+                <div class="battery">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <i class="fas fa-battery-full"></i>
+                </div>
+            </div>
+
+            <!-- App Header -->
+            <div class="app-header">
+                <button class="back-btn" id="backBtn" onclick="goBack()" style="display: none;">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="header-content">
+                    <h1 class="header-title" id="headerTitle">Project Jasmine</h1>
+                    <p class="header-subtitle" id="headerSubtitle">Welcome to your app</p>
+                </div>
+                <div class="header-actions">
+                    <button class="header-btn" onclick="showScreen('notifications')" id="notificationBtn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" id="notificationBadge">3</span>
+                    </button>
+                    <button class="header-btn" onclick="showScreen('search')" id="searchBtn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Welcome Screen -->
+                <div class="screen active" id="welcome">
+                    <div class="welcome-container">
+                        <div class="app-logo">
+                            <i class="fas fa-gem"></i>
+                        </div>
+                        <h1 class="welcome-title">Project Jasmine</h1>
+                        <p class="welcome-subtitle">Your premium service platform connecting you with trusted professionals for all your needs.</p>
+                        <div class="btn-group">
+                            <button class="btn" onclick="showScreen('login')">
+                                <i class="fas fa-sign-in-alt"></i>
+                                Sign In
+                            </button>
+                            <button class="btn btn-outline" onclick="showScreen('register')">
+                                <i class="fas fa-user-plus"></i>
+                                Create Account
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Registration Screen -->
+                <div class="screen" id="register">
+                    <div class="form-container">
+                        <div class="form-header">
+                            <h2 class="form-title">Create Account</h2>
+                            <p class="form-subtitle">Join thousands of satisfied customers</p>
+                        </div>
+                        
+                        <form id="registerForm">
+                            <div class="form-group">
+                                <label class="form-label">Full Name</label>
+                                <input type="text" class="form-input" id="registerName" placeholder="Enter your full name" required>
+                                <div class="form-error" id="nameError">Please enter your full name</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Email Address</label>
+                                <input type="email" class="form-input" id="registerEmail" placeholder="Enter your email" required>
+                                <div class="form-error" id="emailError">Please enter a valid email address</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" class="form-input" id="registerPhone" placeholder="Enter your phone number" required>
+                                <div class="form-error" id="phoneError">Please enter your phone number</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-input" id="registerPassword" placeholder="Create a strong password" required>
+                                <div class="form-error" id="passwordError">Password must be at least 8 characters</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Confirm Password</label>
+                                <input type="password" class="form-input" id="confirmPassword" placeholder="Confirm your password" required>
+                                <div class="form-error" id="confirmPasswordError">Passwords do not match</div>
+                            </div>
+                            
+                            <button type="submit" class="btn" style="width: 100%; margin-top: 20px;">
+                                <span id="registerBtnText">Create Account</span>
+                                <div class="loading" id="registerLoading" style="display: none;"></div>
+                            </button>
+                        </form>
+                        
+                        <p style="text-align: center; margin-top: 20px; color: #6b7280;">
+                            Already have an account? 
+                            <a href="#" onclick="showScreen('login')" style="color: var(--primary-color); font-weight: 600;">Sign In</a>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Email Verification Screen -->
+                <div class="screen" id="verification">
+                    <div class="verification-container">
+                        <div class="verification-icon">
+                            <i class="fas fa-envelope-open"></i>
+                        </div>
+                        <h2 class="form-title">Verify Your Email</h2>
+                        <p class="form-subtitle">We've sent a 6-digit code to your email address. Enter it below to verify your account.</p>
+                        
+                        <div class="code-input-group">
+                            <input type="text" class="code-input" maxlength="1" id="code1">
+                            <input type="text" class="code-input" maxlength="1" id="code2">
+                            <input type="text" class="code-input" maxlength="1" id="code3">
+                            <input type="text" class="code-input" maxlength="1" id="code4">
+                            <input type="text" class="code-input" maxlength="1" id="code5">
+                            <input type="text" class="code-input" maxlength="1" id="code6">
+                        </div>
+                        
+                        <button class="btn" style="width: 100%;" onclick="verifyEmail()">
+                            <span id="verifyBtnText">Verify Email</span>
+                            <div class="loading" id="verifyLoading" style="display: none;"></div>
+                        </button>
+                        
+                        <p style="text-align: center; margin-top: 20px; color: #6b7280;">
+                            Didn't receive the code? 
+                            <a href="#" onclick="resendCode()" style="color: var(--primary-color); font-weight: 600;">Resend</a>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Login Screen -->
+                <div class="screen" id="login">
+                    <div class="form-container">
+                        <div class="form-header">
+                            <h2 class="form-title">Welcome Back</h2>
+                            <p class="form-subtitle">Sign in to your account</p>
+                        </div>
+                        
+                        <form id="loginForm">
+                            <div class="form-group">
+                                <label class="form-label">Email Address</label>
+                                <input type="email" class="form-input" id="loginEmail" placeholder="Enter your email" required>
+                                <div class="form-error" id="loginEmailError">Please enter your email address</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-input" id="loginPassword" placeholder="Enter your password" required>
+                                <div class="form-error" id="loginPasswordError">Please enter your password</div>
+                            </div>
+                            
+                            <button type="submit" class="btn" style="width: 100%; margin-top: 20px;">
+                                <span id="loginBtnText">Sign In</span>
+                                <div class="loading" id="loginLoading" style="display: none;"></div>
+                            </button>
+                        </form>
+                        
+                        <p style="text-align: center; margin-top: 20px; color: #6b7280;">
+                            <a href="#" onclick="showScreen('forgot-password')" style="color: var(--primary-color); font-weight: 600;">Forgot Password?</a>
+                        </p>
+                        
+                        <p style="text-align: center; margin-top: 10px; color: #6b7280;">
+                            Don't have an account? 
+                            <a href="#" onclick="showScreen('register')" style="color: var(--primary-color); font-weight: 600;">Sign Up</a>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Forgot Password Screen -->
+                <div class="screen" id="forgot-password">
+                    <div class="form-container">
+                        <div class="form-header">
+                            <h2 class="form-title">Reset Password</h2>
+                            <p class="form-subtitle">Enter your email to receive reset instructions</p>
+                        </div>
+                        
+                        <form id="forgotPasswordForm">
+                            <div class="form-group">
+                                <label class="form-label">Email Address</label>
+                                <input type="email" class="form-input" id="forgotEmail" placeholder="Enter your email" required>
+                                <div class="form-error" id="forgotEmailError">Please enter your email address</div>
+                                <div class="form-success" id="forgotEmailSuccess">Reset instructions sent to your email</div>
+                            </div>
+                            
+                            <button type="submit" class="btn" style="width: 100%; margin-top: 20px;">
+                                <span id="forgotBtnText">Send Reset Link</span>
+                                <div class="loading" id="forgotLoading" style="display: none;"></div>
+                            </button>
+                        </form>
+                        
+                        <p style="text-align: center; margin-top: 20px; color: #6b7280;">
+                            Remember your password? 
+                            <a href="#" onclick="showScreen('login')" style="color: var(--primary-color); font-weight: 600;">Sign In</a>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- User Dashboard -->
+                <div class="screen" id="dashboard">
+                    <div class="dashboard-header">
+                        <div class="user-info">
+                            <div class="user-avatar" id="userAvatar">JS</div>
+                            <div class="user-details">
+                                <h2 id="userName">Jasmine Smith</h2>
+                                <p id="userRole">Premium Member</p>
+                            </div>
+                        </div>
+                        
+                        <div class="user-stats">
+                            <div class="stat-item">
+                                <div class="stat-number" id="totalBookings">12</div>
+                                <div class="stat-label">Bookings</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number" id="totalSaved">$2,450</div>
+                                <div class="stat-label">Saved</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number" id="userRating">4.9</div>
+                                <div class="stat-label">Rating</div>
+                            </div>
+                        </div>
+                        
+                        <div class="search-container">
+                            <input type="text" class="search-input" placeholder="Search services..." id="searchServices">
+                            <button class="search-btn" onclick="performSearch()">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="container">
+                        <div class="tab-nav">
+                            <div class="tab-btn active" onclick="switchTab('services')">Services</div>
+                            <div class="tab-btn" onclick="switchTab('bookings')">My Bookings</div>
+                            <div class="tab-btn" onclick="switchTab('profile')">Profile</div>
+                            <div class="tab-btn" onclick="switchTab('support')">Support</div>
+                        </div>
+
+                        <!-- Services Tab -->
+                        <div class="tab-content active" id="services-tab">
+                            <div class="service-categories">
+                                <div class="category-chip active" data-category="all">All</div>
+                                <div class="category-chip" data-category="health">Health</div>
+                                <div class="category-chip" data-category="home">Home</div>
+                                <div class="category-chip" data-category="beauty">Beauty</div>
+                                <div class="category-chip" data-category="automotive">Auto</div>
+                            </div>
+                            
+                            <div class="services-grid" id="servicesGrid">
+                                <!-- Services will be loaded dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Bookings Tab -->
+                        <div class="tab-content" id="bookings-tab">
+                            <div class="booking-list" id="bookingsList">
+                                <!-- Bookings will be loaded dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Profile Tab -->
+                        <div class="tab-content" id="profile-tab">
+                            <div class="profile-section">
+                                <h3 class="section-title">
+                                    <i class="fas fa-user"></i>
+                                    Personal Information
+                                </h3>
+                                <div class="profile-field">
+                                    <span class="field-label">Full Name</span>
+                                    <span class="field-value" id="profileName">Jasmine Smith</span>
+                                    <button class="edit-btn" onclick="editProfile('name')">Edit</button>
+                                </div>
+                                <div class="profile-field">
+                                    <span class="field-label">Email</span>
+                                    <span class="field-value" id="profileEmail">jasmine@example.com</span>
+                                    <button class="edit-btn" onclick="editProfile('email')">Edit</button>
+                                </div>
+                                <div class="profile-field">
+                                    <span class="field-label">Phone</span>
+                                    <span class="field-value" id="profilePhone">+1 (555) 123-4567</span>
+                                    <button class="edit-btn" onclick="editProfile('phone')">Edit</button>
+                                </div>
+                            </div>
+
+                            <div class="profile-section">
+                                <h3 class="section-title">
+                                    <i class="fas fa-credit-card"></i>
+                                    Payment Methods
+                                </h3>
+                                <div class="profile-field">
+                                    <span class="field-label">Primary Card</span>
+                                    <span class="field-value">•••• •••• •••• 1234</span>
+                                    <button class="edit-btn" onclick="editPayment()">Edit</button>
+                                </div>
+                                <div class="profile-field">
+                                    <span class="field-label">PayPal</span>
+                                    <span class="field-value">Connected</span>
+                                    <button class="edit-btn" onclick="editPayment()">Manage</button>
+                                </div>
+                            </div>
+
+                            <div class="profile-section">
+                                <h3 class="section-title">
+                                    <i class="fas fa-cog"></i>
+                                    Preferences
+                                </h3>
+                                <div class="profile-field">
+                                    <span class="field-label">Notifications</span>
+                                    <span class="field-value">Enabled</span>
+                                    <button class="edit-btn" onclick="toggleNotifications()">Toggle</button>
+                                </div>
+                                <div class="profile-field">
+                                    <span class="field-label">Language</span>
+                                    <span class="field-value">English</span>
+                                    <button class="edit-btn" onclick="changeLanguage()">Change</button>
+                                </div>
+                            </div>
+
+                            <button class="btn btn-danger" style="width: 100%; margin-top: 20px;" onclick="logout()">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Sign Out
+                            </button>
+                        </div>
+
+                        <!-- Support Tab -->
+                        <div class="tab-content" id="support-tab">
+                            <div class="profile-section">
+                                <h3 class="section-title">
+                                    <i class="fas fa-life-ring"></i>
+                                    Help & Support
+                                </h3>
+                                <div class="admin-menu">
+                                    <div class="admin-menu-item" onclick="showScreen('faq')">
+                                        <i class="fas fa-question-circle"></i>
+                                        <div class="menu-content">
+                                            <div class="menu-title">FAQ</div>
+                                            <div class="menu-description">Frequently asked questions</div>
+                                        </div>
+                                    </div>
+                                    <div class="admin-menu-item" onclick="contactSupport()">
+                                        <i class="fas fa-envelope"></i>
+                                        <div class="menu-content">
+                                            <div class="menu-title">Contact Support</div>
+                                            <div class="menu-description">Get help from our team</div>
+                                        </div>
+                                    </div>
+                                    <div class="admin-menu-item" onclick="reportIssue()">
+                                        <i class="fas fa-bug"></i>
+                                        <div class="menu-content">
+                                            <div class="menu-title">Report Issue</div>
+                                            <div class="menu-description">Report bugs or problems</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service Detail Screen -->
+                <div class="screen" id="service-detail">
+                    <div class="container">
+                        <div class="service-detail-header" style="text-align: center; margin-bottom: 30px;">
+                            <div class="service-icon" style="margin: 0 auto 15px;" id="serviceDetailIcon">
+                                <i class="fas fa-spa"></i>
+                            </div>
+                            <h2 id="serviceDetailTitle">Massage Therapy</h2>
+                            <p id="serviceDetailCategory">Health & Wellness</p>
+                            <div class="service-rating">
+                                <span class="rating-stars">★★★★★</span>
+                                <span>4.8 (124 reviews)</span>
+                            </div>
+                        </div>
+
+                        <div class="profile-section">
+                            <h3 class="section-title">About This Service</h3>
+                            <p id="serviceDetailDescription">Professional massage therapy services to help you relax and rejuvenate. Our certified therapists use various techniques to provide the best experience.</p>
+                            
+                            <div style="margin: 20px 0;">
+                                <strong>Duration:</strong> <span id="serviceDuration">60 minutes</span><br>
+                                <strong>Price:</strong> <span id="serviceDetailPrice">$75</span>
+                            </div>
+                        </div>
+
+                        <div class="calendar-container">
+                            <div class="calendar-header">
+                                <button class="month-nav" onclick="previousMonth()">‹</button>
+                                <div class="month-year" id="currentMonth">March 2024</div>
+                                <button class="month-nav" onclick="nextMonth()">›</button>
+                            </div>
+                            <div class="calendar-grid" id="calendarGrid">
+                                <!-- Calendar will be generated dynamically -->
+                            </div>
+                        </div>
+
+                        <div class="profile-section">
+                            <h3 class="section-title">Available Times</h3>
+                            <div class="time-slots" id="timeSlots">
+                                <!-- Time slots will be generated dynamically -->
+                            </div>
+                        </div>
+
+                        <button class="btn" style="width: 100%; margin-top: 20px;" onclick="bookService()" id="bookServiceBtn">
+                            <i class="fas fa-calendar-check"></i>
+                            Book Appointment
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Admin Dashboard -->
+                <div class="screen" id="admin">
+                    <div class="container">
+                        <div class="admin-stats">
+                            <div class="admin-stat-card" onclick="showScreen('user-management')">
+                                <i class="fas fa-users stat-icon"></i>
+                                <div class="stat-value" id="totalUsers">1,243</div>
+                                <div class="stat-title">Total Users</div>
+                            </div>
+                            <div class="admin-stat-card" onclick="showScreen('analytics')">
+                                <i class="fas fa-chart-line stat-icon"></i>
+                                <div class="stat-value" id="totalRevenue">$84.2K</div>
+                                <div class="stat-title">Revenue</div>
+                            </div>
+                            <div class="admin-stat-card" onclick="showScreen('bookings-management')">
+                                <i class="fas fa-calendar-alt stat-icon"></i>
+                                <div class="stat-value" id="totalBookingsAdmin">327</div>
+                                <div class="stat-title">Bookings</div>
+                            </div>
+                            <div class="admin-stat-card" onclick="showScreen('reviews-management')">
+                                <i class="fas fa-star stat-icon"></i>
+                                <div class="stat-value" id="averageRating">4.8</div>
+                                <div class="stat-title">Rating</div>
+                            </div>
+                        </div>
+
+                        <div class="admin-menu">
+                            <div class="admin-menu-item" onclick="showScreen('user-management')">
+                                <i class="fas fa-user-cog"></i>
+                                <div class="menu-content">
+                                    <div class="menu-title">User Management</div>
+                                    <div class="menu-description">Manage user accounts and permissions</div>
+                                </div>
+                            </div>
+                            <div class="admin-menu-item" onclick="showScreen('content-management')">
+                                <i class="fas fa-edit"></i>
+                                <div class="menu-content">
+                                    <div class="menu-title">Content Management</div>
+                                    <div class="menu-description">Manage services and content</div>
+                                </div>
+                            </div>
+                            <div class="admin-menu-item" onclick="showScreen('analytics')">
+                                <i class="fas fa-chart-pie"></i>
+                                <div class="menu-content">
+                                    <div class="menu-title">Analytics & Reports</div>
+                                    <div class="menu-description">View detailed analytics and reports</div>
+                                </div>
+                            </div>
+                            <div class="admin-menu-item" onclick="showScreen('system-settings')">
+                                <i class="fas fa-server"></i>
+                                <div class="menu-content">
+                                    <div class="menu-title">System Settings</div>
+                                    <div class="menu-description">Configure system preferences</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Management Screen -->
+                <div class="screen" id="user-management">
+                    <div class="container">
+                        <div class="search-container" style="margin-bottom: 20px;">
+                            <input type="text" class="search-input" placeholder="Search users..." id="userSearch">
+                            <button class="search-btn" onclick="searchUsers()">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+
+                        <div class="user-management-table">
+                            <div class="table-header">
+                                <h3 class="table-title">User Management</h3>
+                            </div>
+                            <div id="usersList">
+                                <!-- Users will be loaded dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Screen -->
+                <div class="screen" id="analytics">
+                    <div class="container">
+                        <div class="chart-container">
+                            <h3 class="chart-title">Revenue Overview</h3>
+                            <div class="canvas-container">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-container">
+                            <h3 class="chart-title">User Growth</h3>
+                            <div class="canvas-container">
+                                <canvas id="userGrowthChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-container">
+                            <h3 class="chart-title">Service Popularity</h3>
+                            <div class="canvas-container">
+                                <canvas id="serviceChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifications Screen -->
+                <div class="screen" id="notifications">
+                    <div class="container">
+                        <div id="notificationsList">
+                            <!-- Notifications will be loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search Screen -->
+                <div class="screen" id="search">
+                    <div class="container">
+                        <div class="search-container" style="margin-bottom: 20px;">
+                            <input type="text" class="search-input" placeholder="Search anything..." id="globalSearch">
+                            <button class="search-btn" onclick="globalSearch()">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+
+                        <div class="profile-section">
+                            <h3 class="section-title">Recent Searches</h3>
+                            <div class="search-history" id="searchHistory">
+                                <!-- Search history will be loaded dynamically -->
+                            </div>
+                        </div>
+
+                        <div class="profile-section">
+                            <h3 class="section-title">Popular Services</h3>
+                            <div class="services-grid" id="popularServices">
+                                <!-- Popular services will be loaded dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Navigation -->
+            <div class="bottom-nav">
+                <div class="nav-item active" onclick="showScreen('dashboard')" data-screen="dashboard">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </div>
+                <div class="nav-item" onclick="showScreen('search')" data-screen="search">
+                    <i class="fas fa-search"></i>
+                    <span>Search</span>
+                </div>
+                <div class="nav-item" onclick="showScreen('notifications')" data-screen="notifications">
+                    <i class="fas fa-bell"></i>
+                    <span>Alerts</span>
+                </div>
+                <div class="nav-item" onclick="showScreen('dashboard'); switchTab('profile')" data-screen="profile">
+                    <i class="fas fa-user"></i>
+                    <span>Profile</span>
+                </div>
+                <div class="nav-item" onclick="showScreen('admin')" data-screen="admin">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Admin</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <button class="floating-btn" onclick="quickBook()" title="Quick Book">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- Modal for various actions -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Modal Title</h3>
+                <button class="close-btn" onclick="closeModal()">×</button>
+            </div>
+            <div id="modalBody">
+                <!-- Modal content will be loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast for notifications -->
+    <div class="toast" id="toast"></div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
